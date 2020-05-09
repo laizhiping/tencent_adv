@@ -5,8 +5,6 @@ from torch.utils.data import DataLoader
 
 from read_dataset import ReadDataset
 
-# device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
 class BPbaseline(nn.Module):
     def __init__(self,input_dim = 8):
         super(BPbaseline, self).__init__()
@@ -15,22 +13,26 @@ class BPbaseline(nn.Module):
             nn.Hardtanh(),
             nn.Linear(4096,4096),
             nn.Hardtanh(),
-            nn.Linear(4096,2048),
+            nn.Linear(4096,4096),
             nn.Hardtanh(),
-            nn.Linear(2048,1024),
+            nn.Linear(4096,2048),
             nn.Hardtanh()
             )
         self.age_layer = nn.Sequential(
-            nn.Linear(1024,512),
+            nn.Linear(2048,1024),
             nn.Hardtanh(),
-            nn.Linear(512,10),
+            nn.Linear(1024,1024),
+            nn.Hardtanh(),
+            nn.Linear(1024,10),
             nn.Softmax(dim=-1)
             )
 
         self.gender_layer = nn.Sequential(
-            nn.Linear(1024,512),
+            nn.Linear(2048,1024),
             nn.Hardtanh(),
-            nn.Linear(512,2),
+            nn.Linear(1024,1024),
+            nn.Hardtanh(),
+            nn.Linear(1024,2),
             nn.Softmax(dim=-1)
             )
     def forward(self,input, age_input=None, gender_input=None):
@@ -47,11 +49,12 @@ class BPbaseline(nn.Module):
             return loss
 
 if __name__ == '__main__':
-    batch_size = 512
+    batch_size = 100000
     learning_rate = 0.00001
     epoch_num = 100
     # 导入数据集
-    train_data = ReadDataset('train_preliminary/user_ad_info.csv')
+    train_data = ReadDataset('user_ad_info.csv')
+    # print(len(train_data)) # 30082771
     train_loader = DataLoader(dataset = train_data, batch_size = batch_size, shuffle = True)
 
     # 构造网络
@@ -65,13 +68,16 @@ if __name__ == '__main__':
     scheduler = torch.optim.lr_scheduler.StepLR(adam, step_size=1, gamma=0.98)
 
     print('train begin .................................')
+    device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+    network.to(device)
     network.train()
+
     for epoch in range(epoch_num):
         scheduler.step()
         epoch_loss = 0
         for batch,data in enumerate(train_loader):
 
-            loss = network(data[0].float(),data[1].float(),data[2].float())
+            loss = network(data[0].float().to(device),data[1].float().to(device),data[2].float().to(device))
             adam.zero_grad()
             loss.backward()
             adam.step()
