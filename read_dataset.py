@@ -109,6 +109,7 @@ if __name__ == '__main__':
             print(train_x , age, gender)
      #       tensor([[  1,   1,   5, 381,  81,   1]]) tensor([[0., 0., 0., 1., 0., 0., 0., 0., 0., 0.]]) tensor([[1., 0.]])
             break
+            
     else: # test data
         if not os.path.exists('test/ad_info.csv'):
             deal_test_csv(ad_csv = 'test/ad.csv', click_log_csv = 'test/click_log.csv', 
@@ -117,12 +118,12 @@ if __name__ == '__main__':
         batch_size = 1
         #读入新表，返回新表数据(torch tensor格式)
         test_data = ReadDataset(csv_path = 'test/ad_info.csv', is_train_data = is_train_data)
-        print(len(train_data))
+        print(len(test_data))
         test_loader = DataLoader(dataset = test_data, batch_size = batch_size, shuffle = False)
         # print(train_loader.size())
         for batch, item in enumerate(test_loader):
             test_x , user_id = item[0], item[1]
-            print(train_x , user_id)
+            print(test_x , user_id)
             break
 
 
